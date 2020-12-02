@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"runtime"
 	"sync"
@@ -15,11 +16,19 @@ func main() {
 	go func() {
 		defer wg.Done()
 		log.Println("inside goroutine")
-		go func() {
-			for range time.Tick(1 * time.Second) {
-				log.Println("inside goroutine leak")
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		go func(ctx context.Context) {
+			for {
+				select {
+				case <-ctx.Done():
+					log.Println("inside goroutine stop")
+					return
+				case <-time.Tick(1 * time.Second):
+					log.Println("inside goroutine leak")
+				}
 			}
-		}()
+		}(ctx)
 		time.Sleep(5 * time.Second)
 		exitChan <- true
 		log.Println("go off")
@@ -42,7 +51,7 @@ func main() {
 	log.Printf("num=%d", runtime.NumGoroutine())
 	log.Println("waiting...")
 	wg.Wait()
-	time.Sleep(5 * time.Second)
+	time.Sleep(1 * time.Second)
 	log.Printf("num=%d", runtime.NumGoroutine())
 	log.Println("the end")
 }
