@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"log"
+	"reflect"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
@@ -35,13 +36,33 @@ func main() {
 	defer rows.Close()
 
 	for rows.Next() {
-		var entity Entity
-		err := rows.StructScan(&entity)
+		// var entity Entity
+		// scannerPointers := []interface{}{
+		// 	&entity.ID,
+		// 	&entity.CreatedTime,
+		// }
+		row, err := rows.SliceScan()
 		failOnError(err, "scan row")
+		log.Printf("row: %+v", row)
 
-		log.Printf("struct: %+v", entity)
-		log.Println(entity.ID.Value())
-		log.Println(entity.CreatedTime.Value())
-		log.Printf("id=%d, created_time=%v", entity.ID.Int32, entity.CreatedTime.Time)
+		for i, v := range row {
+			vType := reflect.TypeOf(v)
+			if vType == nil {
+				log.Println("null")
+				continue
+			}
+			log.Printf("%d:  type=%T ", i, v)
+			switch vType.Kind() {
+			case reflect.Int64:
+				log.Printf("(int64)")
+			case reflect.Struct:
+				log.Printf("(struct)")
+			}
+			log.Println()
+		}
+		// log.Printf("struct: %+v", entity)
+		// log.Println(entity.ID.Value())
+		// log.Println(entity.CreatedTime.Value())
+		// log.Printf("id=%d, created_time=%v", entity.ID.Int32, entity.CreatedTime.Time)
 	}
 }
