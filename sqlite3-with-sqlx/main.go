@@ -2,8 +2,8 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
-	"reflect"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
@@ -37,29 +37,14 @@ func main() {
 
 	for rows.Next() {
 		// var entity Entity
-		// scannerPointers := []interface{}{
-		// 	&entity.ID,
-		// 	&entity.CreatedTime,
-		// }
-		row, err := rows.SliceScan()
+		maps := make(map[string]interface{}, 100)
+		fmt.Printf("%v\n", maps)
+		err := rows.MapScan(maps)
 		failOnError(err, "scan row")
-		log.Printf("row: %+v", row)
 
-		for i, v := range row {
-			vType := reflect.TypeOf(v)
-			if vType == nil {
-				log.Println("null")
-				continue
-			}
-			log.Printf("%d:  type=%T ", i, v)
-			switch vType.Kind() {
-			case reflect.Int64:
-				log.Printf("(int64)")
-			case reflect.Struct:
-				log.Printf("(struct)")
-			}
-			log.Println()
-		}
+		log.Printf("map: %+v", maps)
+		fmt.Println(len(maps))
+
 		// log.Printf("struct: %+v", entity)
 		// log.Println(entity.ID.Value())
 		// log.Println(entity.CreatedTime.Value())
