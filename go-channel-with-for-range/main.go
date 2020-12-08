@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -11,27 +12,21 @@ func main() {
 
 	dataChan := make(chan struct{})
 
-	type Counter struct {
-		sync.Mutex
-		value int
-	}
-	var counter = new(Counter)
+	var counter int32
 	var waitGroup = new(sync.WaitGroup)
 
 	// create workers
 	for i := 1; i <= 100; i++ {
 		// consumer
-		go func(workerNo int, wg *sync.WaitGroup, c *Counter, ch chan struct{}) {
+		go func(workerNo int, wg *sync.WaitGroup, c *int32, ch chan struct{}) {
 			defer wg.Done()
 			wg.Add(1)
 
 			for v := range dataChan {
 				log.Printf("value #%d: %+v\n", workerNo, v)
-				c.Lock()
-				c.value++
-				c.Unlock()
+				atomic.AddInt32(c, 1)
 			}
-		}(i, waitGroup, counter, dataChan)
+		}(i, waitGroup, &counter, dataChan)
 	}
 
 	// producer
