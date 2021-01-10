@@ -1,0 +1,29 @@
+package main
+
+import (
+	"fmt"
+	"log"
+	"sync"
+	"time"
+)
+
+func main() {
+	wait := new(sync.WaitGroup)
+	wait.Add(1)
+	wait.Add(-1)
+	for i := 0; i < 1000; i++ {
+		targetUrl := fmt.Sprintf("https://google.com/%d", i)
+		go func(url string) {
+			log.Println(url)
+			time.Sleep(2000 * time.Millisecond)
+			// wait.Done()
+		}(targetUrl)
+	}
+	wait.Wait()
+	log.Println("Done ja")
+}
+
+// goroutine
+// data race
+// mutex
+// wait group
