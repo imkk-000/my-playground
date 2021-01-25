@@ -14,6 +14,7 @@ type AppCtxKey int
 
 const (
 	appValueCtxKey AppCtxKey = iota
+	appValueCtx1Key
 )
 
 func main() {
@@ -25,13 +26,18 @@ func main() {
 	appCtx := AppCtx{
 		State: 1,
 	}
-	appValueCtx := context.WithValue(appStateCtx, appValueCtxKey, &appCtx)
+	appValueCtx := context.WithValue(appStateCtx, appValueCtxKey, appCtx)
+	appCtx.State = 3
+	appValueCtx = context.WithValue(appValueCtx, appValueCtx1Key, &appCtx)
 
 	go func(ctx context.Context) {
-		appCtx := ctx.Value(appValueCtxKey).(*AppCtx)
+		appCtx := ctx.Value(appValueCtxKey).(AppCtx)
 		fmt.Printf("%+v\n", appCtx)
 		appCtx.State++
 		fmt.Printf("%+v\n", appCtx)
+
+		appCtx1 := ctx.Value(appValueCtx1Key).(*AppCtx)
+		fmt.Printf("%+v\n", appCtx1)
 
 		select {
 		case <-ctx.Done():
